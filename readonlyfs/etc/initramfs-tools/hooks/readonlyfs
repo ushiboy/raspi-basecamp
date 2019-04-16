@@ -1,0 +1,6 @@
+#!/bin/sh
+
+. /usr/share/initramfs-tools/scripts/functions
+. /usr/share/initramfs-tools/hook-functions
+
+manual_add_modules overlay

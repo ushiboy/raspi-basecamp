@@ -1,0 +1,115 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs()
+{
+    echo "$PREREQ"
+}
+
+case $1 in
+    prereqs)
+        prereqs
+        exit 0
+    ;;
+esac
+
+. /scripts/functions
+
+want_readonlyfs()
+{
+    [ -e /proc/cmdline ] || return 1
+    grep "\<noreadonlyfs\>" /proc/cmdline > /dev/null 2>&1 && return 2
+    grep "\<readonlyfs\>" /proc/cmdline > /dev/null 2>&1 && return 0
+    return 1
+}
+
+has_overlayfs()
+{
+    [ -e /proc/filesystems ] || return 1
+    grep "\<overlay\>" /proc/filesystems > /dev/null 2>&1 && return 0
+    return 1
+}
+
+make_mount_dir()
+{
+    [ -d $1 ] || mkdir -p $1
+    if [ $? -ne 0 ]; then
+        log_failure_msg "ERROR: failed to create $1"
+        exit 0
+    fi
+}
+
+mount_tmpfs()
+{
+    mount -n -t tmpfs tmpfs $1
+    if [ $? -ne 0 ]; then
+        log_failure_msg "ERROR: failed to create tmpfs $1"
+        exit 0
+    fi
+}
+
+mount_move()
+{
+    mount -n -o move $1 $2
+    if [ $? -ne 0 ]; then
+        log_failure_msg "ERROR: failed to move from $1 to $2"
+        exit 0
+    fi
+}
+
+mount_bind()
+{
+    mount -n -o bind $1 $2
+    if [ $? -ne 0 ]; then
+        log_failure_msg "ERROR: failed to bind from $1 to $2"
+        exit 0
+    fi
+}
+
+mount_overlay()
+{
+    mount -n -t overlay -o lowerdir=$1,upperdir=$2,workdir=$3 overlay $4
+    if [ $? -ne 0 ]; then
+        log_failure_msg "ERROR: failed to overlay lower:$1 upper:$2 work:$3 merged:$4"
+        exit 0
+    fi
+}
+
+want_readonlyfs
+W=$?
+if ! [ "$W" = 0 ] ; then
+    if [ "$W" = 2 ] ; then
+        _log_msg "readonlyfs: readonlyfs disabled"
+    fi
+    exit 0
+fi
+
+modprobe -q overlay
+
+if ! has_overlayfs ; then
+    log_failure_msg "readonlyfs: No overlayfs kernel support"
+    exit 1
+fi
+
+BASE=/readonlyfs
+log_begin_msg "Setting up readonlyfs (overlayfs):"
+[ -d $BASE ] || ( mkdir -m 700 $BASE || mkdir $BASE )
+make_mount_dir $BASE/system     # overlayfs lowerdir
+make_mount_dir $BASE/tmp        # overlayfs upperdir and workdir space
+make_mount_dir $BASE/overlayfs  # overlayfs merged
+
+mount_bind ${rootmnt} $BASE/system
+mount_tmpfs $BASE/tmp
+make_mount_dir $BASE/tmp/upper  # overlayfs upperdir
+make_mount_dir $BASE/tmp/work   # overlayfs workdir
+mount_overlay $BASE/system $BASE/tmp/upper $BASE/tmp/work $BASE/overlayfs
+umount ${rootmnt}
+mount_move $BASE/overlayfs ${rootmnt}
+make_mount_dir ${rootmnt}$BASE/system
+make_mount_dir ${rootmnt}$BASE/tmp
+mount_move $BASE/system ${rootmnt}$BASE/system
+mount_move $BASE/tmp ${rootmnt}$BASE/tmp
+
+log_end_msg "Done..."
+exit 0
