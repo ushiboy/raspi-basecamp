@@ -1,0 +1,71 @@
+#!/bin/bash
+
+SRC_IMAGE=$1
+DST_IMAGE="custom-$SRC_IMAGE"
+
+cp $SRC_IMAGE $DST_IMAGE
+truncate -s 4GiB $DST_IMAGE
+
+ROOT_SIZE="+3G"
+ROOT_PART_NUM=2
+ROOT_START=`fdisk -l $DST_IMAGE | grep img2 | awk '{print $2}'`
+
+fdisk $DST_IMAGE <<EOF
+d
+$ROOT_PART_NUM
+n
+p
+$ROOT_PART_NUM
+$ROOT_START
+$ROOT_SIZE
+w
+EOF
+
+ROOT_END=`fdisk -l $DST_IMAGE | grep img2 | awk '{print $3}'`
+EXTRA_START=`expr $ROOT_END + 1`
+EXTRA_PART_NUM=`expr $ROOT_PART_NUM + 1`
+
+
+fdisk $DST_IMAGE <<EOF
+n
+p
+$EXTRA_PART_NUM
+$EXTRA_START
+
+w
+EOF
+
+LOOP_DEV=(`kpartx -av $DST_IMAGE | awk '{print $3}'`)
+BASE="/dev/mapper"
+BOOT_DEV="$BASE/${LOOP_DEV[0]}"
+ROOT_DEV="$BASE/${LOOP_DEV[1]}"
+EXTRA_DEV="$BASE/${LOOP_DEV[2]}"
+
+mkdir -p rootfs
+mkdir -p boot
+
+while :
+do
+    if [ -e $BOOT_DEV ]; then
+        break
+    fi
+done
+mount $BOOT_DEV boot
+mount $ROOT_DEV rootfs
+
+mkfs -t ext4 $EXTRA_DEV
+e2label $EXTRA_DEV extrafs
+
+sed -i "s/init=\/usr\/lib\/raspi-config\/init_resize.sh//g" boot/cmdline.txt
+
+echo "/dev/mmcblk0p3  /extra      ext4    defaults,noatime  0       1" >> rootfs/etc/fstab
+
+mkdir rootfs/extra
+
+umount boot
+umount rootfs
+
+kpartx -d $DST_IMAGE
+
+rm -rf boot
+rm -rf rootfs
