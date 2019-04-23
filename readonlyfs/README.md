@@ -6,7 +6,7 @@ The main purpose is to use it for Raspberry PI.
 
 ## Install
 
-Login to Raspbian and clone the repository.
+Login to Raspbian and clone the repository. Run `install.sh`.
 
 ```
 $ git clone https://github.com/ushiboy/raspi-basecamp.git
@@ -66,4 +66,13 @@ tmpfs on /run/user/1000 type tmpfs (rw,nosuid,nodev,relatime,size=94944k,mode=70
 
 It is a success if displayed as `/dev/mmcblk0p2 on /readonlyfs/system type ext4 (ro,relatime,data=ordered)`.
 
+## About parameter value
+
+### `readonlyfs`
+
+Enable read only.
+
+### `noreadonlyfs`
+
+Disable read only.
 
