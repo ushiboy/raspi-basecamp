@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ "`whoami`" != "root" ]; then
+    echo "Require root privilege"
+    exit 1
+fi
+
 apt-get update
 apt-get install -y busybox
 dphys-swapfile swapoff
