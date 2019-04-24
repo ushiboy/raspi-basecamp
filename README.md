@@ -8,6 +8,7 @@ Collection of tools for customizing Raspberry PI (Raspbian).
 ### create-extra-partition
 
 Command to add extrafs partition to Raspbian OS image file.
+This requires kpartx.
 
 ```
 $ bin/create-extra-partition path/to/YYYY-MM-DD-raspbian-stretch-lite.img
