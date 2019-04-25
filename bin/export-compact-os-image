@@ -1,0 +1,29 @@
+#!/bin/bash
+
+DEVICE_SD_CARD=$1
+EXPORT_FILE=$2
+
+check_privilege()
+{
+    if [ "`whoami`" != "root" ]; then
+        echo "Require root privilege"
+        exit 1
+    fi
+}
+
+check_privilege
+
+if ! [ -e $DEVICE_SD_CARD ]; then
+    echo "Device not found."
+    exit 1
+fi
+
+if [ "$EXPORT_FILE" = "" ]; then
+    EXPORT_FILE="export.img"
+fi
+
+END_SECTORS=(`fdisk -l $DEVICE_SD_CARD | grep -e "^$DEVICE_SD_CARD" | awk '{print $3}'`)
+END_INDEX=`expr ${#END_SECTORS[*]} - 1`
+END_POSITION=${END_SECTORS[$END_INDEX]}
+
+dd if=$DEVICE_SD_CARD bs=512 of=$EXPORT_FILE count=$END_POSITION
