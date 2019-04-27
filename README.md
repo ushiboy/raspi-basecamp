@@ -8,7 +8,9 @@ Collection of tools for customizing Raspberry PI (Raspbian).
 ### create-extra-partition
 
 Command to add extrafs partition to Raspbian OS image file.
-This requires kpartx.
+This requires `kpartx`.
+
+![create-extra-partition](./docs/images/create-extra-partition.png)
 
 ```
 $ bin/create-extra-partition path/to/YYYY-MM-DD-raspbian-stretch-lite.img
@@ -18,10 +20,12 @@ $ bin/create-extra-partition path/to/YYYY-MM-DD-raspbian-stretch-lite.img
 
 Command to export os image file.
 
+![export-compact-os-image](./docs/images/export-compact-os-image.png)
+
 ```
 $ bin/export-compact-os-image path/to/sdcard path/to/export.img
 ```
 
 ### readonlyfs
 
-[readonlyfs](./readonlyfs/README.md) makes the root file system read-only using overlayfs.
+readonlyfs makes the root file system read-only using overlayfs. See [detail](./readonlyfs/README.md).
