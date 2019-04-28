@@ -29,3 +29,15 @@ $ sudo bin/export-compact-os-image path/to/sdcard path/to/export.img
 ### readonlyfs
 
 readonlyfs makes the root file system read-only using overlayfs. See [detail](./readonlyfs/README.md).
+
+### swap-extra-path
+
+Move the "rootfs" partition file to the "extrafs" partition and replace it with a symbolic link.
+
+This command needs to be executed on Raspbian OS.
+
+![swap-extra-path](./docs/images/swap-extra-path.png)
+
+```
+$ sudo bin/swap-extra-path path/to/file
+```
