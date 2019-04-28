@@ -13,7 +13,7 @@ This requires `kpartx`.
 ![create-extra-partition](./docs/images/create-extra-partition.png)
 
 ```
-$ bin/create-extra-partition path/to/YYYY-MM-DD-raspbian-stretch-lite.img
+$ sudo bin/create-extra-partition path/to/YYYY-MM-DD-raspbian-stretch-lite.img
 ```
 
 ### export-compact-os-image
@@ -23,9 +23,21 @@ Command to export os image file.
 ![export-compact-os-image](./docs/images/export-compact-os-image.png)
 
 ```
-$ bin/export-compact-os-image path/to/sdcard path/to/export.img
+$ sudo bin/export-compact-os-image path/to/sdcard path/to/export.img
 ```
 
 ### readonlyfs
 
 readonlyfs makes the root file system read-only using overlayfs. See [detail](./readonlyfs/README.md).
+
+### swap-extra-path
+
+Move the "rootfs" partition file to the "extrafs" partition and replace it with a symbolic link.
+
+This command needs to be executed on Raspbian OS.
+
+![swap-extra-path](./docs/images/swap-extra-path.png)
+
+```
+$ sudo bin/swap-extra-path path/to/file
+```

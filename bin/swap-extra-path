@@ -1,0 +1,43 @@
+#!/bin/bash
+
+check_privilege()
+{
+    if [ "`whoami`" != "root" ]; then
+        echo "Require root privilege"
+        exit 1
+    fi
+}
+
+is_noreadonlyfs()
+{
+    [ -e /proc/cmdline ] || return 0
+    grep "\<readonlyfs\>" /proc/cmdline > /dev/null 2>&1 && return 1
+    return 0
+}
+
+swap_path()
+{
+    SRC_PATH=$1
+    SRC_DIR_PATH=`dirname $SRC_PATH`
+    if [ "$SRC_DIR_PATH" = "/" ]; then
+        echo "$SRC_PATH can not be swapped"
+        exit 1
+    fi
+
+    DST_PATH="/extra$SRC_PATH"
+
+    mkdir -p "/extra$SRC_DIR_PATH"
+    cp $SRC_PATH $DST_PATH
+    rm -rf $SRC_PATH
+    ln -s $DST_PATH $SRC_PATH
+}
+
+check_privilege
+
+is_noreadonlyfs
+if ! [ "$?" = 0 ] ; then
+    echo "Need to disable readonlyfs"
+    exit 1
+fi
+
+swap_path $1
