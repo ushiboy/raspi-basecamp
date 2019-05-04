@@ -11,6 +11,8 @@
 
 . /lib/lsb/init-functions
 
+SHOULD_REBOOT=0
+
 want_expand()
 {
     if ! [ -e /boot/expandfs ]; then
@@ -29,26 +31,28 @@ disable_readonlyfs_once()
 {
     sed -i "s/readonlyfs/noreadonlyfs/" /boot/cmdline.txt
     touch /boot/expandfs-after-readonly
-    reboot
+    SHOULD_REBOOT=1
 }
 
-start_expand_extrafs()
+expand_extrafs_if_needed()
 {
     want_expand
     W=$?
     if ! [ "$W" = 1 ]; then
-        exit 0
+        return 0
     fi
 
     if is_enable_readonlyfs; then
         disable_readonlyfs_once
-        exit 0
+        return 0
     fi
 
+    rm /boot/expandfs
     fill_expand_extrafs
     unregister_expand_extrafs
     register_resize_to_extrafs_once
-    reboot
+    SHOULD_REBOOT=1
+    return 0
 }
 
 fill_expand_extrafs()
@@ -72,7 +76,6 @@ EOF
 
 unregister_expand_extrafs()
 {
-    rm /boot/expandfs
     update-rc.d expand_extrafs remove
     rm /etc/init.d/expand_extrafs
 }
@@ -93,6 +96,8 @@ register_resize_to_extrafs_once()
 
 . /lib/lsb/init-functions
 
+SHOULD_REBOOT=0
+
 want_readonly_after_expand()
 {
     if ! [ -e /boot/expandfs-after-readonly ]; then
@@ -106,7 +111,7 @@ enable_readonlyfs()
     sed -i "s/noreadonlyfs/readonlyfs/" /boot/cmdline.txt
 }
 
-start_resize_extrafs()
+resize_extrafs()
 {
     resize2fs /dev/mmcblk0p3
     update-rc.d resize2extrafs_once remove
@@ -115,8 +120,15 @@ start_resize_extrafs()
     want_readonly_after_expand
     W=\$?
     if [ "\$W" = 1 ]; then
-        enable_readonlyfs
         rm /boot/expandfs-after-readonly
+        enable_readonlyfs
+        SHOULD_REBOOT=1
+    fi
+}
+
+reboot_os_if_needed()
+{
+    if [ "\$SHOULD_REBOOT" = 1 ]; then
         reboot
     fi
 }
@@ -124,8 +136,9 @@ start_resize_extrafs()
 case "\$1" in
     start)
         log_daemon_msg "Starting resize2extrafs_once" &&
-        start_resize_extrafs &&
+        resize_extrafs &&
         log_end_msg \$?
+        reboot_os_if_needed
     ;;
     *)
         echo "Usage: \$0 start" >&2
@@ -137,12 +150,19 @@ EOF
     update-rc.d resize2extrafs_once defaults
 }
 
+reboot_os_if_needed()
+{
+    if [ "$SHOULD_REBOOT" = 1 ]; then
+        reboot
+    fi
+}
 
 case "$1" in
     start)
         log_daemon_msg "Starting expand_extrafs" &&
-        start_expand_extrafs &&
+        expand_extrafs_if_needed &&
         log_end_msg $?
+        reboot_os_if_needed
     ;;
     *)
         echo "Usage: $0 start" >&2
