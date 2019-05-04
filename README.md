@@ -16,6 +16,12 @@ This requires `kpartx`.
 $ sudo bin/create-extra-partition path/to/YYYY-MM-DD-raspbian-stretch-lite.img
 ```
 
+### expand-extrafs
+
+Expand the `extrafs` partition created by [create-extra-partition](../bin/create-extra-partition) to the maximum size of the SD card. See [detail](./expand-extrafs/README.md).
+
+![expand-extrafs](./docs/images/expand-extrafs.png)
+
 ### export-compact-os-image
 
 Command to export os image file.

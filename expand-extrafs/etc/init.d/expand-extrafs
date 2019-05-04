@@ -1,0 +1,171 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          expand-extrafs
+# Required-Start:
+# Required-Stop:
+# Default-Start: 3
+# Default-Stop:
+# Short-Description: Expand the extra filesystem to fill partition
+# Description:
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+SHOULD_REBOOT=0
+
+want_expand()
+{
+    if ! [ -e /boot/expandfs ]; then
+        return 0
+    fi
+    return 1
+}
+
+is_enable_readonlyfs()
+{
+    grep "\<readonlyfs\>" /proc/cmdline > /dev/null 2>&1 && return 0
+    return 1
+}
+
+disable_readonlyfs_once()
+{
+    sed -i "s/readonlyfs/noreadonlyfs/" /boot/cmdline.txt
+    touch /boot/expandfs-after-readonly
+    SHOULD_REBOOT=1
+}
+
+expand_extrafs_if_needed()
+{
+    want_expand
+    W=$?
+    if ! [ "$W" = 1 ]; then
+        return 0
+    fi
+
+    if is_enable_readonlyfs; then
+        disable_readonlyfs_once
+        return 0
+    fi
+
+    rm /boot/expandfs
+    fill_expand_extrafs
+    unregister_expand_extrafs
+    register_resize_to_extrafs_once
+    SHOULD_REBOOT=1
+    return 0
+}
+
+fill_expand_extrafs()
+{
+    PART_NUM=3
+    PART_START=$(parted /dev/mmcblk0 -ms unit s p | grep "^${PART_NUM}" | cut -f 2 -d: | sed 's/[^0-9]//g')
+    fdisk /dev/mmcblk0 <<EOF
+p
+d
+$PART_NUM
+n
+p
+$PART_NUM
+$PART_START
+
+p
+w
+EOF
+
+}
+
+unregister_expand_extrafs()
+{
+    update-rc.d expand-extrafs remove
+    rm /etc/init.d/expand-extrafs
+}
+
+register_resize_to_extrafs_once()
+{
+    cat <<EOF > /etc/init.d/resize2extrafs-once &&
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          resize2extrafs-once
+# Required-Start:
+# Required-Stop:
+# Default-Start: 3
+# Default-Stop:
+# Short-Description: Resize the Extra filesystem to fill partition
+# Description:
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+SHOULD_REBOOT=0
+
+want_readonly_after_expand()
+{
+    if ! [ -e /boot/expandfs-after-readonly ]; then
+        return 0
+    fi
+    return 1
+}
+
+enable_readonlyfs()
+{
+    sed -i "s/noreadonlyfs/readonlyfs/" /boot/cmdline.txt
+}
+
+resize_extrafs()
+{
+    resize2fs /dev/mmcblk0p3
+    update-rc.d resize2extrafs-once remove
+    rm /etc/init.d/resize2extrafs-once
+
+    want_readonly_after_expand
+    W=\$?
+    if [ "\$W" = 1 ]; then
+        rm /boot/expandfs-after-readonly
+        enable_readonlyfs
+        SHOULD_REBOOT=1
+    fi
+}
+
+reboot_os_if_needed()
+{
+    if [ "\$SHOULD_REBOOT" = 1 ]; then
+        reboot
+    fi
+}
+
+case "\$1" in
+    start)
+        log_daemon_msg "Starting resize2extrafs-once" &&
+        resize_extrafs &&
+        log_end_msg \$?
+        reboot_os_if_needed
+    ;;
+    *)
+        echo "Usage: \$0 start" >&2
+        exit 3
+    ;;
+esac
+EOF
+    chmod +x /etc/init.d/resize2extrafs-once
+    update-rc.d resize2extrafs-once defaults
+}
+
+reboot_os_if_needed()
+{
+    if [ "$SHOULD_REBOOT" = 1 ]; then
+        reboot
+    fi
+}
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting expand-extrafs" &&
+        expand_extrafs_if_needed &&
+        log_end_msg $?
+        reboot_os_if_needed
+    ;;
+    *)
+        echo "Usage: $0 start" >&2
+        exit 3
+    ;;
+esac
