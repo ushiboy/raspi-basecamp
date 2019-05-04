@@ -2,6 +2,8 @@
 
 Expand the `extrafs` partition created by [create-extra-partition](../bin/create-extra-partition) to the maximum size of the SD card.
 
+![expand-extrafs](../docs/images/expand-extrafs.png)
+
 ## Install
 
 Login to Raspbian and clone the repository. Run `install.sh`.
