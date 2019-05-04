@@ -19,4 +19,4 @@ fi
 apt-get update
 apt-get install -y parted
 cp -a etc/init.d /etc
-update-rc.d expand_extrafs defaults
+update-rc.d expand-extrafs defaults

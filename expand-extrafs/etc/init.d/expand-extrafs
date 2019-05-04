@@ -1,6 +1,6 @@
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          expand_extrafs
+# Provides:          expand-extrafs
 # Required-Start:
 # Required-Stop:
 # Default-Start: 3
@@ -76,16 +76,16 @@ EOF
 
 unregister_expand_extrafs()
 {
-    update-rc.d expand_extrafs remove
-    rm /etc/init.d/expand_extrafs
+    update-rc.d expand-extrafs remove
+    rm /etc/init.d/expand-extrafs
 }
 
 register_resize_to_extrafs_once()
 {
-    cat <<EOF > /etc/init.d/resize2extrafs_once &&
+    cat <<EOF > /etc/init.d/resize2extrafs-once &&
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          resize2extrafs_once
+# Provides:          resize2extrafs-once
 # Required-Start:
 # Required-Stop:
 # Default-Start: 3
@@ -114,8 +114,8 @@ enable_readonlyfs()
 resize_extrafs()
 {
     resize2fs /dev/mmcblk0p3
-    update-rc.d resize2extrafs_once remove
-    rm /etc/init.d/resize2extrafs_once
+    update-rc.d resize2extrafs-once remove
+    rm /etc/init.d/resize2extrafs-once
 
     want_readonly_after_expand
     W=\$?
@@ -135,7 +135,7 @@ reboot_os_if_needed()
 
 case "\$1" in
     start)
-        log_daemon_msg "Starting resize2extrafs_once" &&
+        log_daemon_msg "Starting resize2extrafs-once" &&
         resize_extrafs &&
         log_end_msg \$?
         reboot_os_if_needed
@@ -146,8 +146,8 @@ case "\$1" in
     ;;
 esac
 EOF
-    chmod +x /etc/init.d/resize2extrafs_once
-    update-rc.d resize2extrafs_once defaults
+    chmod +x /etc/init.d/resize2extrafs-once
+    update-rc.d resize2extrafs-once defaults
 }
 
 reboot_os_if_needed()
@@ -159,7 +159,7 @@ reboot_os_if_needed()
 
 case "$1" in
     start)
-        log_daemon_msg "Starting expand_extrafs" &&
+        log_daemon_msg "Starting expand-extrafs" &&
         expand_extrafs_if_needed &&
         log_end_msg $?
         reboot_os_if_needed
