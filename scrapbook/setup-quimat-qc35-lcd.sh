@@ -44,7 +44,7 @@ EOF
 
 add_fbcon_for_cmdline()
 {
-    sed -z 's/\n/ fbcon=map:10 fbcon=font:ProFont6x11\n/g' /boot/cmdline.txt
+    sed -z -i 's/\n/ fbcon=map:10 fbcon=font:ProFont6x11\n/g' /boot/cmdline.txt
 }
 
 add_fbturbo_config()
@@ -70,4 +70,6 @@ append_hdmi_config
 install_xserver
 add_calibration_config
 setup_input_evdev
+add_fbcon_for_cmdline
+add_fbturbo_config
 reboot
