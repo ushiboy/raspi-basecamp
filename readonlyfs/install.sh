@@ -6,7 +6,7 @@ if [ "`whoami`" != "root" ]; then
 fi
 
 apt-get update
-apt-get install -y busybox
+apt-get install -y busybox initramfs-tools
 dphys-swapfile swapoff
 dphys-swapfile uninstall
 update-rc.d dphys-swapfile disable
