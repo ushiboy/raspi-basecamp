@@ -47,3 +47,7 @@ This command needs to be executed on Raspbian OS.
 ```
 $ sudo bin/swap-extra-path path/to/file
 ```
+
+### wait-timesync
+
+wait-timesync is a service that waits for NTP synchronization completion by systemd-timesyncd. See [detail](./wait-timesync/README.md)
