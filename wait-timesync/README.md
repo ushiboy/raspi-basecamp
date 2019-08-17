@@ -24,3 +24,21 @@ Edit `/etc/default/wait-timesync`.
 | WAIT_CLOCK_TARGET | The path of the file to be monitored. | /var/lib/systemd/clock |
 | WAIT_TIMEOUT | Monitoring timeout seconds. | 60 |
 
+## Usage
+
+Add `After=wait-timesync.service` to your application's systemd configuration file.
+
+```
+[Unit]
+Description = My Application
+After=wait-timesync.service
+
+[Service]
+ExecStart = start_app
+WorkingDirectory = /var/lib/myapp
+Restart=always
+Type=simple
+
+[Install]
+WantedBy = multi-user.target
+```
