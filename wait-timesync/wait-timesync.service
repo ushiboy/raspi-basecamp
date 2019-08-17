@@ -1,0 +1,11 @@
+[Unit]
+Description = Wait timesyncd
+After=systemd-timesyncd.service
+
+[Service]
+ExecStart = /usr/local/bin/wait-timesync
+EnvironmentFile = /etc/default/wait-timesync
+Type=oneshot
+
+[Install]
+WantedBy = multi-user.target
