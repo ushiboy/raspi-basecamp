@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# restart-network applies network interface configuration changes without restarting the OS.
+# This implementation is based on the method described in the following forum article:
+#
+#   https://lb.raspberrypi.org/forums/viewtopic.php?t=199860
+#
+# [Usage]
+#
+#   * When restarting all network interfaces (the lo interface is excluded)
+#
+#       $ sudo restart-network
+#
+#   * When restarting the specified network interface
+#
+#       $ sudo restart-network eth0
+#
+
+check_privilage()
+{
+    if [ "`whoami`" != "root" ]; then
+        echo "Require root privilege"
+        exit 1
+    fi
+}
+
+stop_dhcpcd()
+{
+    systemctl daemon-reload
+    systemctl stop dhcpcd
+}
+
+flush_ip_address()
+{
+    ip addr flush dev $1
+}
+
+flush_ip_addresses()
+{
+    DEVICES=(`ls /sys/class/net`)
+    for DEVICE in ${DEVICES[@]}
+    do
+        if [ "$DEVICE" != "lo" ]; then
+            flush_ip_address $DEVICE
+        fi
+    done
+}
+
+start_dhcpcd()
+{
+    systemctl start dhcpcd
+}
+
+check_privilage
+
+TARGET="all"
+
+if [ $# -eq 1 ]; then
+    TARGET=$1
+fi
+
+stop_dhcpcd
+
+if [ $TARGET == "all" ]; then
+    flush_ip_addresses
+else
+    flush_ip_address $TARGET
+fi
+
+start_dhcpcd
