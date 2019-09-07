@@ -36,6 +36,10 @@ $ sudo bin/export-compact-os-image path/to/sdcard path/to/export.img
 
 readonlyfs makes the root file system read-only using overlayfs. See [detail](./readonlyfs/README.md).
 
+### restart-network
+
+restart-network applies network interface configuration changes without restarting the OS. See [detail](./restart-network/README.md).
+
 ### swap-extra-path
 
 Move the "rootfs" partition file to the "extrafs" partition and replace it with a symbolic link.
@@ -50,4 +54,4 @@ $ sudo bin/swap-extra-path path/to/file
 
 ### wait-timesync
 
-wait-timesync is a service that waits for NTP synchronization completion by systemd-timesyncd. See [detail](./wait-timesync/README.md)
+wait-timesync is a service that waits for NTP synchronization completion by systemd-timesyncd. See [detail](./wait-timesync/README.md).
