@@ -4,16 +4,13 @@ This is a patch for `initramfs-tools` for Raspbian.
 
 When updating the kernel, the initramfs file and `/boot/config.txt` are also updated.
 
-## Usage
-
-### for v0.133+deb10u1 (Buster)
+## Install
 
 ```
-$ sudo patch -p1 -d / < initramfs-tools-v0.133+deb10u1.patch
+$ sudo ./install.sh
 ```
 
-### for v0.130 (Stretch)
+## Supported versions
 
-```
-$ sudo patch -p1 -d / < initramfs-tools-v0.130.patch
-```
+* v0.133+deb10u1 (Buster)
+* v0.130 (Stretch)
