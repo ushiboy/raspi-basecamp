@@ -14,3 +14,4 @@ systemctl disable dphys-swapfile
 cp -a etc/initramfs-tools /etc
 update-initramfs -c -k $(uname -r)
 echo "initramfs initrd.img-$(uname -r)" >> /boot/config.txt
+./initramfs-tools-patch/install.sh
