@@ -5,6 +5,8 @@ if [ "`whoami`" != "root" ]; then
     exit 1
 fi
 
+cd `dirname $0`
+
 VERSION=`dpkg -l | grep -e "initramfs-tools\s" | awk '{print $3}'`
 
 PATCH_FILE="initramfs-tools-v$VERSION.patch"
