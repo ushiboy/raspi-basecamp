@@ -1,0 +1,56 @@
+--- a/etc/kernel/postinst.d/initramfs-tools
++++ b/etc/kernel/postinst.d/initramfs-tools
+@@ -16,6 +16,12 @@ if [ "$INITRD" = 'No' ]; then
+ 	exit 0
+ fi
+ 
++# skip ignore version lib
++if [ ! -e "/lib/modules/$version" ]; then
++	echo "Not exist module libraries. [$version]"
++	exit 0
++fi
++
+ # absolute file name of kernel image may be passed as a second argument;
+ # create the initrd in the same directory
+ if [ -n "$2" ]; then
+@@ -34,3 +40,13 @@ fi
+ # we're good - create initramfs.  update runs do_bootloader
+ # shellcheck disable=SC2086
+ INITRAMFS_TOOLS_KERNEL_HOOK=1 update-initramfs -c -k "${version}" ${bootopt} >&2
++
++# replace /boot/config.txt
++current_version="$(uname -r)"
++old_version_number=${current_version%-*}
++if echo $version | grep -Pq "^\d+\.\d+\.\d+\+$"; then
++	old_version="$old_version_number+"
++else
++	old_version="$old_version_number-${version#*-}"
++fi
++sed -i "s/initramfs initrd.img-$old_version/initramfs initrd.img-$version/g" "$bootdir/config.txt"
+--- a/usr/sbin/update-initramfs
++++ b/usr/sbin/update-initramfs
+@@ -94,17 +94,20 @@ set_initramfs()
+ backup_initramfs()
+ {
+ 	[ ! -r "${initramfs}" ] && return 0
+-	initramfs_bak="${initramfs}.dpkg-bak"
++	#initramfs_bak="${initramfs}.dpkg-bak"
++	initramfs_bak="/var/tmp/$(basename initramfs).dpkg-bak"
+ 	[ -r "${initramfs_bak}" ] && rm -f "${initramfs_bak}"
+-	ln -f "${initramfs}" "${initramfs_bak}" \
+-		|| cp -a "${initramfs}" "${initramfs_bak}"
++	#ln -f "${initramfs}" "${initramfs_bak}" \
++	#	|| cp -a "${initramfs}" "${initramfs_bak}"
++	mv "${initramfs}" "${initramfs_bak}"
+ 	verbose "Keeping ${initramfs_bak}"
+ }
+ 
+ # keep booted initramfs
+ backup_booted_initramfs()
+ {
+-	initramfs_bak="${initramfs}.dpkg-bak"
++	#initramfs_bak="${initramfs}.dpkg-bak"
++	initramfs_bak="/var/tmp/$(basename initramfs).dpkg-bak"
+ 
+ 	# first time run thus no backup
+ 	[ ! -r "${initramfs_bak}" ] && return 0

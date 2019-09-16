@@ -12,5 +12,6 @@ dphys-swapfile uninstall
 update-rc.d dphys-swapfile disable
 systemctl disable dphys-swapfile
 cp -a etc/initramfs-tools /etc
-mkinitramfs -o /boot/initrd.gz
-echo initramfs initrd.gz >> /boot/config.txt
+update-initramfs -c -k $(uname -r)
+echo "initramfs initrd.img-$(uname -r)" >> /boot/config.txt
+./initramfs-tools-patch/install.sh
