@@ -43,10 +43,7 @@ setup_keyboard_jp()
 
 setup_wifi_country()
 {
-    wpa_cli set country "JP" > /dev/null 2>&1
-    if [ "$?" = 0 ]; then
-        wpa_cli save_config
-    fi
+    raspi-config nonint do_wifi_country JP
 }
 
 check_privilage
